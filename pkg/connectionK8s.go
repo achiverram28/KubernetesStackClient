@@ -11,7 +11,7 @@ import (
 	clientcmd "k8s.io/client-go/tools/clientcmd"
 )
 
-func ConnectTok8s() *kubernetes.Clientset {
+func ConnectTok8s() (*kubernetes.Clientset,error) {
 	home, exists := os.LookupEnv("HOME")
 	if !exists {
 		home = "/root"
@@ -22,12 +22,14 @@ func ConnectTok8s() *kubernetes.Clientset {
 	config , err := clientcmd.BuildConfigFromFlags("",configPath)
 	if err != nil {
 		log.Panicln("failed to create k8s config")
+		return nil, err
 	}
 
 	clientset, err:= kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Panicln("Failed to create k8s clientset")
+		return nil, err
 	}
 
-	return clientset
+	return clientset, nil
 }
