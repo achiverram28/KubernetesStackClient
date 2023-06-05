@@ -10,22 +10,21 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
- 
 
-func ListPods(namespace string,clientset *kubernetes.Clientset) ([]string,int32,error) {
+func ListPods(namespace string, clientset *kubernetes.Clientset) ([]string, int32, error) {
 
 	ans := []string{}
 
-	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(),v1.ListOptions{})
+	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{})
 
 	if err != nil {
 		log.Panicln("Failed to get pods")
-		return nil,int32(-1),err
+		return nil, int32(-1), err
 	}
 
 	for _, pod := range pods.Items {
-        ans = append(ans,fmt.Sprintf("%v",pod.Name))
-    }
+		ans = append(ans, fmt.Sprintf("Name: %s, IP: %s", pod.ObjectMeta.Name, pod.Status.PodIP))
+	}
 
-	return ans,int32(len(pods.Items)),nil
+	return ans, int32(len(pods.Items)), nil
 }
