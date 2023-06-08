@@ -10,6 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
+	metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 func ListPods(namespace string, clientset *kubernetes.Clientset) ([]string, int32, error) {
@@ -56,6 +57,21 @@ func PodHealthCheck(clientset *kubernetes.Clientset, namespace string, podName s
 
 	for _, condition := range podConditions {
 		fmt.Println(condition.Type, " : ", condition.Status)
+	}
+
+}
+
+func PodMetrics(metricset *metricsv.Clientset, namespace string, podName string) {
+
+	podMetrics, err := metricset.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podName, v1.GetOptions{})
+	if err != nil {
+		log.Printf("Failed to get metrics for pod %s: %v", podName, err)
+		return
+	}
+
+	log.Printf("Metrics for the pod %s: ", podName)
+	for _, container := range podMetrics.Containers {
+		log.Printf("Container name : %s,\n CPU usage: %v,\nMemory usage: %v\n", container.Name, container.Usage["cpu"], container.Usage["memory"])
 	}
 
 }
