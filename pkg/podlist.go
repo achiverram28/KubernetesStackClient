@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
@@ -27,4 +28,34 @@ func ListPods(namespace string, clientset *kubernetes.Clientset) ([]string, int3
 	}
 
 	return ans, int32(len(pods.Items)), nil
+}
+
+func PodHealthCheck(clientset *kubernetes.Clientset, namespace string, podName string) {
+
+	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, v1.GetOptions{})
+	if err != nil {
+		log.Printf("Failed to get pod: %s", podName)
+	}
+
+	if pod.Status.Phase != corev1.PodRunning {
+		log.Printf("Pod %s is not running", podName)
+		return
+	}
+
+	podConditions := pod.Status.Conditions
+
+	for _, condition := range podConditions {
+		if condition.Type == corev1.PodReady {
+			if condition.Status == corev1.ConditionTrue {
+				log.Printf("Pod %s is ready", podName)
+			} else {
+				log.Printf("Pod %s is not ready", podName)
+			}
+		}
+	}
+
+	for _, condition := range podConditions {
+		fmt.Println(condition.Type, " : ", condition.Status)
+	}
+
 }
