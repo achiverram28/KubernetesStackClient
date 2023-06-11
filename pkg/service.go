@@ -13,7 +13,7 @@ import (
 )
 
 func CreateService(clientset *kubernetes.Clientset, namespace string,
-	serviceName string, labelKey string, labelValue string , containerPort int32, targetPort int32){
+	serviceName string, labelKey string, labelValue string, containerPort int32, targetPort int32) {
 
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -25,23 +25,30 @@ func CreateService(clientset *kubernetes.Clientset, namespace string,
 			},
 			Ports: []v1.ServicePort{
 				{
-					Port: containerPort,
+					Port:       containerPort,
 					TargetPort: intstr.FromInt(int(targetPort)),
-					Protocol: v1.ProtocolTCP,
+					Protocol:   v1.ProtocolTCP,
 				},
 			},
 			Type: v1.ServiceTypeLoadBalancer,
 		},
 	}
 
-	result, err := clientset.CoreV1().Services(namespace).Create(context.TODO(),service,metav1.CreateOptions{})
+	result, err := clientset.CoreV1().Services(namespace).Create(context.TODO(), service, metav1.CreateOptions{})
 	if err != nil {
 		log.Panicln("Failed to create service")
 	}
 
-	fmt.Printf("Successfully created service: %s\n",result.ObjectMeta.Name)
+	fmt.Printf("Successfully created service: %s\n", result.ObjectMeta.Name)
 }
 
-func DeleteService(){
-	//TODO
+func DeleteService(clientset *kubernetes.Clientset, namespace string, serviceName string) {
+
+	err := clientset.CoreV1().Services(namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
+	if err != nil {
+		log.Panicln("Failed to delete service")
+	}
+
+	log.Printf("The service %s in namespace %s has been deleted", serviceName, namespace)
+
 }

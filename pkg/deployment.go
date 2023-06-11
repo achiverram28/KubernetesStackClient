@@ -12,7 +12,7 @@ import (
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 
-func CreateDeployment(clientset *kubernetes.Clientset, namespace string, deploymentName string,replicas int32,labelKey string, labelValue string, containerName string, image string, port int32) {
+func CreateDeployment(clientset *kubernetes.Clientset, namespace string, deploymentName string, replicas int32, labelKey string, labelValue string, containerName string, image string, port int32) {
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -25,41 +25,44 @@ func CreateDeployment(clientset *kubernetes.Clientset, namespace string, deploym
 					labelKey: labelValue,
 				},
 			},
-		Template: v1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{
-                    labelKey: labelValue,
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						labelKey: labelValue,
+					},
 				},
-			},
-			Spec: v1.PodSpec{
-				Containers: []v1.Container{
-					{
-                     Name: containerName,
-					 Image: image,
-					 Ports: []v1.ContainerPort{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
 						{
-						ContainerPort: port,
+							Name:  containerName,
+							Image: image,
+							Ports: []v1.ContainerPort{
+								{
+									ContainerPort: port,
+								},
+							},
 						},
-					 },
 					},
 				},
 			},
 		},
-},
 	}
 
-	result, err := clientset.AppsV1().Deployments(namespace).Create(context.TODO(),deployment,metav1.CreateOptions{})
-    if err != nil {
+	result, err := clientset.AppsV1().Deployments(namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+	if err != nil {
 		log.Panicln("Failed to create deployment")
 	}
 
-	fmt.Printf("Successfully created deployment: %s\n",result.ObjectMeta.Name)
+	fmt.Printf("Successfully created deployment: %s\n", result.ObjectMeta.Name)
 }
 
-func UpdateDEployment() {
-	//TODO
-}
+func DeleteDeployment(clientset *kubernetes.Clientset, namespace string, deploymentName string) {
 
-func DeleteDeployment() {
-	//TODO
+	err := clientset.AppsV1().Deployments(namespace).Delete(context.TODO(), deploymentName, metav1.DeleteOptions{})
+	if err != nil {
+		log.Panicln("Failed to delete deployment")
+	}
+
+	log.Printf("The deployment %s in namespace %s has been deleted", deploymentName, namespace)
+
 }
