@@ -1,4 +1,3 @@
-// kube-prometheus-stack installation using helm
 package helmpkg
 
 import (
@@ -6,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/repo"
@@ -23,6 +23,13 @@ type chartFormat struct {
 	chartVersion string
 	appVersion string
 	Description string
+}
+
+type releaseFormat struct {
+	Name string
+	Namespace string
+	ChartName string
+	Status string
 }
 
 func HelmRepoList() []repoFormat{
@@ -101,4 +108,30 @@ func HelmRepoChartList(repoName string) []chartFormat{
 
 	return chartNames
 	
+}
+
+func HelmList() []releaseFormat {
+	settings = cli.New()
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(settings.RESTClientGetter(),"default","secret",log.Printf); err != nil {
+		log.Fatal(err)
+	}
+
+	client := action.NewList(actionConfig)
+
+	results, err := client.Run()
+	if err != nil {
+		log.Printf("%+v", err)
+		os.Exit(1)
+	}
+
+	var releases []releaseFormat
+
+	for _, rel := range results {
+		releases = append(releases, releaseFormat{Name: rel.Name,Namespace: rel.Namespace,ChartName: rel.Chart.Metadata.Name,Status: rel.Info.Status.String()})
+	}
+
+	return releases
+
+
 }
