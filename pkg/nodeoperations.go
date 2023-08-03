@@ -2,20 +2,14 @@ package pkg
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
 	"log"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
-	// metricsv "k8s.io/metrics/pkg/client/clientset/versioned"
+
 )
 
-type NodeCapacity struct {
-
-	CPU string
-	Memory string
-
-}
 
 func ListNodes(clientset *kubernetes.Clientset) ([]string, error) {
 
@@ -58,5 +52,24 @@ func GetNodeCapacity(clientset *kubernetes.Clientset , nodeName string) ([]NodeC
    capacity = append(capacity,NodeCapacity{CPU: cpuCapacity.String(),Memory: memCapacity.String()})
    
    return capacity,nil
+
+}
+
+func GetNodeStatus(clientset *kubernetes.Clientset , nodeName string) ([]NodeStatus,error) {
+
+	statusList := []NodeStatus{}
+
+	node, err := clientset.CoreV1().Nodes().Get(context.TODO(),nodeName,v1.GetOptions{})
+	if err != nil {
+		log.Panicln("Failed to get the node")
+		return nil, err
+	}
+
+	for _, condition := range node.Status.Conditions {
+			statusList = append(statusList,NodeStatus{Type: fmt.Sprintf("%s",condition.Type),Status: fmt.Sprintf("%s",condition.Status),Reason:fmt.Sprintf("%s",condition.Reason)})
+		}
+
+	return statusList,nil
+
 
 }
