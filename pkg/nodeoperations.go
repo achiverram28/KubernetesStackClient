@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubernetes "k8s.io/client-go/kubernetes"
 
@@ -72,4 +73,55 @@ func GetNodeStatus(clientset *kubernetes.Clientset , nodeName string) ([]NodeSta
 	return statusList,nil
 
 
+}
+
+func GetNodeLabels(clientset *kubernetes.Clientset,nodeName string) (map[string]string,error){
+	
+	node, err := clientset.CoreV1().Nodes().Get(context.TODO(),nodeName,v1.GetOptions{})
+	if err != nil {
+		log.Panicln("Failed to get the node")
+		return nil, err
+	}
+
+	labels := node.Labels
+
+	return labels,nil
+}
+
+func GetNodeInfo(clientset *kubernetes.Clientset,nodeName string) (corev1.NodeSystemInfo,error){
+	
+	node, err := clientset.CoreV1().Nodes().Get(context.TODO(),nodeName,v1.GetOptions{})
+	if err != nil {
+		log.Panicln("Failed to get the node")
+		return corev1.NodeSystemInfo{}, err
+	}
+
+	info := node.Status.NodeInfo
+
+	return info,nil
+}
+
+func GetNodeAddresses(clientset *kubernetes.Clientset,nodeName string) ([]corev1.NodeAddress,error){
+	
+	node, err := clientset.CoreV1().Nodes().Get(context.TODO(),nodeName,v1.GetOptions{})
+	if err != nil {
+		log.Panicln("Failed to get the node")
+		return nil, err
+	}
+
+	addresses := node.Status.Addresses
+
+	return addresses,nil
+}
+
+func GetNodeDaemonEndPoints(clientset *kubernetes.Clientset,nodeName string) (corev1.NodeDaemonEndpoints,error){
+	
+	node, err := clientset.CoreV1().Nodes().Get(context.TODO(),nodeName,v1.GetOptions{})
+	if err != nil {
+		log.Panicln("Failed to get the node")
+	}
+
+	endpoints := node.Status.DaemonEndpoints
+
+	return endpoints,nil
 }
